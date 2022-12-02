@@ -3,16 +3,18 @@
   "version": "1.0.0",
   "description": "_We're looking at your programming ability. It must not only work, it should be maintainable._",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "npm run build && node dist/index.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.11.10",
-    "ts-node": "^10.9.1",
     "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "csv-parse": "^5.3.3"
   }
 }
