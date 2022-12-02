@@ -1,3 +1,4 @@
+import { fetchPrices } from "./prices.js";
 import { readDataByLine } from "./reader.js";
 
 const delimeter = ",";
@@ -28,7 +29,8 @@ const main = async () => {
     console.info(`${token} ${creditAmount}`)
   });
 
-  portfolios.forEach((value, key) => console.log({ key, value }));
+  const prices = await fetchPrices(Array.from(portfolios.keys()))
+  portfolios.forEach((amount, token) => console.log(token, amount * prices[token].USD) )
 };
 
 main();
