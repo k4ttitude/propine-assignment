@@ -1,7 +1,9 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import { fetchPrices } from "./prices.js";
 import { readDataByLine } from "./reader.js";
 
-const delimeter = ",";
+const DELIMETER = ",";
 
 type Transaction = {
   timestamp: string;
@@ -19,7 +21,7 @@ const readTokenTransactions = async () => {
       return;
     }
 
-    const parts = line.split(delimeter);
+    const parts = line.split(DELIMETER);
     if (parts.length !== 4) {
       console.info(`Skipped line ${count}`);
       return;
