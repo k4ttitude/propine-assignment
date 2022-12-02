@@ -3,8 +3,14 @@ import { readDataByLine } from "./reader.js";
 
 const delimeter = ",";
 
-const main = async () => {
-  const portfolios = new Map<string, number>();
+type Transaction = {
+  timestamp: string;
+  transaction_type: string;
+  amount: number;
+};
+
+const readTokenTransactions = async () => {
+  const tokens = new Map<string, Transaction[]>();
 
   let count = -1;
   await readDataByLine((line) => {
@@ -19,18 +25,44 @@ const main = async () => {
       return;
     }
 
-    const [_timestamp, transaction_type, token, amount] = parts;
+    const [timestamp, transaction_type, token, amount] = parts;
     const parsedAmount = parseFloat(amount);
-    const creditAmount =
-      parsedAmount * (transaction_type === "DEPOSIT" ? 1 : -1);
-
-    const tokenAmount = portfolios.get(token) || 0;
-    portfolios.set(token, tokenAmount + creditAmount);
-    console.info(`${token} ${creditAmount}`)
+    const tokenTransactions = tokens.get(token) || [];
+    tokenTransactions.push({
+      timestamp,
+      transaction_type,
+      amount: parsedAmount,
+    });
+    tokens.set(token, tokenTransactions);
   });
 
-  const prices = await fetchPrices(Array.from(portfolios.keys()))
-  portfolios.forEach((amount, token) => console.log(token, amount * prices[token].USD) )
+  return tokens;
+};
+
+const main = async () => {
+  const tokenTransactions = await readTokenTransactions();
+  const portfolios = Array.from(tokenTransactions.entries()).map(
+    ([token, transactions]) => ({
+      token,
+      amount: transactions
+        .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+        .reduce((total, { timestamp, amount, transaction_type }) => {
+          const newAmount =
+            total + amount * (transaction_type === "DEPOSIT" ? 1 : -1);
+          if (newAmount < 0) {
+            console.error("Invalid WITHDRAWAL:", token, amount, timestamp);
+            return total;
+          }
+          return newAmount;
+        }, 0),
+    })
+  );
+
+  const prices = await fetchPrices(portfolios.map((p) => p.token));
+  console.info('PORFOLIO VALUES:')
+  portfolios.forEach(({ token, amount }) =>
+    console.log(token, amount * prices[token].USD)
+  );
 };
 
 main();
